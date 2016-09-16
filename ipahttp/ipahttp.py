@@ -3,18 +3,18 @@
 # without having to install their toolchain, also you do not have to rely on
 # kerberos implementations in python.
 #
-# This sorry excuse for a module have 1 requirement outside of the python 
-# standard library: 
+# This sorry excuse for a module have 1 requirement outside of the python
+# standard library:
 # * requests
 #
 # Todo:
 # - Pull in the rest of the FreeIPA methods
 # - Fix the "API version not sent" message
 # -----------------------------------------------------------------------------
+
 import requests
 import json
 import logging
-
 
 class ipa(object):
 
@@ -73,9 +73,14 @@ class ipa(object):
 
         return results
 
-    def group_add(self, group, gidnumber, description=None):
-        m = {'method': 'group_add', 'item': [group], 'params': {'all': True,
-             'gidnumber': gidnumber, 'description': description}}
+    def group_add(self, group, description=None):
+        m = {'method': 'group_add',
+             'item': [group],
+             'params': {
+                 'all': True,
+                 'description': description
+             }
+        }
         results = self.makeReq(m)
 
         return results
@@ -196,10 +201,13 @@ class ipa(object):
 
         return results
 
-    def user_find(self, user=None, sizelimit=40000):
-        m = {'item': [user], 'method': 'user_find', 'params':
-             {'all': True, 'no_members': False, 'sizelimit': sizelimit,
-              'whoami': False}}
+    def user_find(self, user=None, attrs={}, sizelimit=40000):
+        params = {'all': True,
+                  'no_members': False,
+                  'sizelimit': sizelimit,
+                  'whoami': False}
+        params.update(attrs)
+        m = {'item': [user], 'method': 'user_find', 'params': params}
         results = self.makeReq(m)
 
         return results
@@ -221,6 +229,82 @@ class ipa(object):
     def user_unlock(self, user):
         m = {'item': [user], 'method': 'user_unlock', 'params':
              {'version': '2.112'}}
+        results = self.makeReq(m)
+
+        return results
+
+    def user_mod(self, user, addattrs=[], setattrs=[], delattrs=[]):
+        m = {
+            'id': 0,
+            'method': 'user_mod',
+            'item': [user],
+            'params': {
+                    'all': False,
+                    'no_members': False,
+                    'raw': False,
+                    'rights': False,
+                    'version': '2.164'
+            }
+        }
+        if len(addattrs):
+            m['params']['addattr'] = addattrs
+        if len(setattrs):
+            m['params']['setattr'] = setattrs
+        if len(delattrs):
+            m['params']['delattr'] = delattrs
+
+        return self.makeReq(m)
+
+    def stageuser_find(self, user=None, attrs={}, sizelimit=40000):
+        params = {'all': True,
+                  'no_members': False,
+                  'sizelimit': sizelimit,
+        }
+        params.update(attrs)
+        m = {'item': [user], 'method': 'stageuser_find', 'params': params}
+        results = self.makeReq(m)
+
+        return results
+
+    def stageuser_add(self, user, opts, addattrs=None, setattrs=None):
+        opts['all'] = False
+        if addattrs is not None:
+            opts['addattr'] = addattrs
+        if setattrs is not None:
+            opts['setattr'] = setattrs
+        m = {
+            'method': 'stageuser_add',
+            'item': [user],
+            'params': opts
+        }
+        results = self.makeReq(m)
+
+        return results
+
+    def stageuser_del(self, user):
+        m = {
+            'method': 'stageuser_del',
+            'item': [user],
+            'params': {
+                'version': '2.164'
+            }
+        }
+        results = self.makeReq(m)
+
+        return results
+
+    def selfservice_add(self, aciname, attrs, permissions=None):
+        m = {
+            'method': 'selfservice_add',
+            'item': [None],
+            'params': {
+                'aciname': aciname,
+                'attrs': attrs,
+                'version': '2.164'
+            }
+        }
+        if permissions is not None:
+            m['params']['permissions'] = permissions
         results = self.makeReq(m)
 
         return results
