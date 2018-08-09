@@ -165,7 +165,7 @@ class ipa(object):
         return results
 
     def host_del(self, hostname):
-        m = {'item': [hostname], 'method': 'host_del', 'params': {'all': True}}
+        m = {'item': [hostname], 'method': 'host_del', 'params': {'version': '2.164'}}
         results = self.makeReq(m)
 
         return results
