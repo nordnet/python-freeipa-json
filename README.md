@@ -16,6 +16,20 @@ ipa.login('apiuser', 'secret_password')
 reply = ipa.host_find()
 for host in reply['result']['result']:
     print('Found host %s' % host['fqdn'][0])
+
+first_name = "Fred"
+second_name = "Idol"
+user = ipa.user_find(attrs={"mail": "fred@example.com"})
+if user["result"]["count"] < 1:
+    result = ipa.user_add(user=first_name, opts={
+        "givenname": first_name,
+        "sn": second_name,
+        "cn": "%s %s" % (first_name, second_name) 
+    })
+    if result["error"] is not None:
+        print(result["error"])
+    else:
+        print("user %s %s was created", (first_name, second_name))
 ```
 
 ## License
