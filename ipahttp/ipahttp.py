@@ -20,6 +20,11 @@ import requests
 class ipa(object):
 
     def __init__(self, server, sslverify=False):
+        """
+        server: string with address of your FreeIPA server
+        sslverify: Either a boolean, in which case it controls whether we verify the server's TLS certificate,
+        or a string, in which case it must be a path to a CA bundle to use. Defaults to ``False``
+        """
         self.server = server
         self.ssl_verify = sslverify
         self.log = logging.getLogger(__name__)
