@@ -27,7 +27,6 @@ class ipa(object):
         self.login_user = None
 
     def login(self, user, password):
-        rv = None
         ipa_url = 'https://{0}/ipa/session/login_password'.format(self.server)
         header = {'referer': ipa_url, 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'text/plain'}
         login = {'user': user, 'password': password}
