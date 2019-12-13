@@ -19,7 +19,7 @@ import requests
 
 class ipa(object):
 
-    def __init__(self, server, ssl_verify=False):
+    def __init__(self, server, sslverify=False):
         self.server = server
         self.ssl_verify = ssl_verify
         self.log = logging.getLogger(__name__)
