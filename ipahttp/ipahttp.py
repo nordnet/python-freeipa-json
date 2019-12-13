@@ -21,7 +21,7 @@ class ipa(object):
 
     def __init__(self, server, sslverify=False):
         self.server = server
-        self.ssl_verify = ssl_verify
+        self.ssl_verify = sslverify
         self.log = logging.getLogger(__name__)
         self.session = requests.Session()
         self.login_user = None
