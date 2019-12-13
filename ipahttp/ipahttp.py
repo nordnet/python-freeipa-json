@@ -12,26 +12,27 @@
 # - Fix the "API version not sent" message
 # -----------------------------------------------------------------------------
 
-import requests
 import json
 import logging
+import requests
+
 
 class ipa(object):
 
-    def __init__(self, server, sslverify=False):
+    def __init__(self, server, ssl_verify=False):
         self.server = server
-        self.sslverify = sslverify
+        self.ssl_verify = ssl_verify
         self.log = logging.getLogger(__name__)
         self.session = requests.Session()
+        self.login_user = None
 
     def login(self, user, password):
         rv = None
-        ipaurl = 'https://{0}/ipa/session/login_password'.format(self.server)
-        header = {'referer': ipaurl, 'Content-Type':
-                  'application/x-www-form-urlencoded', 'Accept': 'text/plain'}
+        ipa_url = 'https://{0}/ipa/session/login_password'.format(self.server)
+        header = {'referer': ipa_url, 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'text/plain'}
         login = {'user': user, 'password': password}
-        rv = self.session.post(ipaurl, headers=header, data=login,
-                               verify=self.sslverify)
+        rv = self.session.post(ipa_url, headers=header, data=login,
+                               verify=self.ssl_verify)
 
         if rv.status_code != 200:
             self.log.warning('Failed to log {0} in to {1}'.format(
@@ -45,23 +46,18 @@ class ipa(object):
             self.login_user = user
         return rv
 
-    def makeReq(self, pdict):
-        results = None
-        ipaurl = 'https://{0}/ipa'.format(self.server)
-        session_url = '{0}/session/json'.format(ipaurl)
-        header = {'referer': ipaurl, 'Content-Type': 'application/json',
-                  'Accept': 'application/json'}
+    def make_req(self, pdict):
+        ipa_url = 'https://{0}/ipa'.format(self.server)
+        session_url = '{0}/session/json'.format(ipa_url)
+        header = {'referer': ipa_url, 'Content-Type': 'application/json', 'Accept': 'application/json'}
+        data = {'id': 0, 'method': pdict['method'], 'params': [pdict['item'], pdict['params']]}
 
-        data = {'id': 0, 'method': pdict['method'], 'params':
-                [pdict['item'], pdict['params']]}
-
-        self.log.debug('Making {0} request to {1}'.format(pdict['method'],
-                        session_url))
+        self.log.debug('Making {0} request to {1}'.format(pdict['method'], session_url))
 
         request = self.session.post(
-                session_url, headers=header,
-                data=json.dumps(data),
-                verify=self.sslverify
+            session_url, headers=header,
+            data=json.dumps(data),
+            verify=self.ssl_verify
         )
         results = request.json()
 
@@ -69,7 +65,7 @@ class ipa(object):
 
     def config_show(self):
         m = {'method': 'config_show', 'item': [None], 'params': {'all': True}}
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
@@ -80,10 +76,10 @@ class ipa(object):
                  'all': True,
                  'description': description
              }
-        }
+             }
         if gidnumber is not None:
             m['params']['gidnumber'] = gidnumber
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
@@ -92,15 +88,15 @@ class ipa(object):
             raise ValueError('Type {0} is not a valid member type,\
              specify user or group'.format(membertype))
         m = {
-                'item': [group],
-                'method': 'group_add_member',
-                'params': {
-                    'all': True,
-                    'raw': True,
-                    membertype: item
-                }
+            'item': [group],
+            'method': 'group_add_member',
+            'params': {
+                'all': True,
+                'raw': True,
+                membertype: item
+            }
         }
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
@@ -118,21 +114,19 @@ class ipa(object):
                 "version": "2.164"
             }
         }
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
     def group_find(self, group=None, sizelimit=40000):
-        m = {'method': 'group_find', 'item': [group], 'params': {'all': True,
-             'sizelimit': sizelimit}}
-        results = self.makeReq(m)
+        m = {'method': 'group_find', 'item': [group], 'params': {'all': True, 'sizelimit': sizelimit}}
+        results = self.make_req(m)
 
         return results
 
     def group_show(self, group):
-        m = {'item': [group], 'method': 'group_show', 'params':
-             {'all': True, 'raw': False}}
-        results = self.makeReq(m)
+        m = {'item': [group], 'method': 'group_show', 'params': {'all': True, 'raw': False}}
+        results = self.make_req(m)
 
         return results
 
@@ -141,11 +135,11 @@ class ipa(object):
             'method': 'group_mod',
             'item': [group],
             'params': {
-                    'all': False,
-                    'no_members': False,
-                    'raw': False,
-                    'rights': False,
-                    'version': '2.164'
+                'all': False,
+                'no_members': False,
+                'raw': False,
+                'rights': False,
+                'version': '2.164'
             }
         }
         if len(addattrs):
@@ -155,55 +149,51 @@ class ipa(object):
         if len(delattrs):
             m['params']['delattr'] = delattrs
 
-        return self.makeReq(m)
+        return self.make_req(m)
 
     def host_add(self, hostname, opasswd, force=True):
-        m = {'item': [hostname], 'method': 'host_add', 'params': {'all': True,
-             'force': force, 'userpassword': opasswd}}
-        results = self.makeReq(m)
+        m = {'item': [hostname], 'method': 'host_add', 'params': {'all': True, 'force': force, 'userpassword': opasswd}}
+        results = self.make_req(m)
 
         return results
 
     def host_del(self, hostname):
         m = {'item': [hostname], 'method': 'host_del', 'params': {'all': True}}
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
     def host_find(self, hostname=None, in_hg=None, sizelimit=40000):
-        m = {'method': 'host_find', 'item': [hostname], 'params':
-             {'all': True, 'in_hostgroup': in_hg, 'sizelimit': sizelimit}}
-        results = self.makeReq(m)
+        m = {'method': 'host_find', 'item': [hostname],
+             'params': {'all': True, 'in_hostgroup': in_hg, 'sizelimit': sizelimit}}
+        results = self.make_req(m)
 
         return results
 
-    def host_mod(self, hostname, description=None, locality=None,
-                 location=None, platform=None, osver=None):
-        m = {'item': [hostname], 'method': 'host_mod', 'params':
-             {'all': True, 'description': description, 'locality': locality,
-              'nshostlocation': location, 'nshardwareplatform': platform,
-              'nsosversion': osver}}
-        results = self.makeReq(m)
+    def host_mod(self, hostname, description=None, locality=None, location=None, platform=None, osver=None):
+        m = {'item': [hostname], 'method': 'host_mod',
+             'params': {'all': True, 'description': description, 'locality': locality, 'nshostlocation': location,
+                        'nshardwareplatform': platform, 'nsosversion': osver}}
+        results = self.make_req(m)
 
         return results
 
     def host_show(self, hostname):
-        m = {'item': [hostname], 'method': 'host_show', 'params':
-             {'all': True}}
-        results = self.makeReq(m)
+        m = {'item': [hostname], 'method': 'host_show', 'params': {'all': True}}
+        results = self.make_req(m)
 
         return results
 
     def hostgroup_add(self, hostgroup, description=None):
         m = {
-                'method': 'hostgroup_add',
-                'item': [hostgroup],
-                'params': {
-                    'all': True,
-                    'description': description
-                }
+            'method': 'hostgroup_add',
+            'item': [hostgroup],
+            'params': {
+                'all': True,
+                'description': description
+            }
         }
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
@@ -211,18 +201,17 @@ class ipa(object):
         if type(hostname) != list:
             hostname = [hostname]
         m = {
-                'method': 'hostgroup_add_member',
-                'item': [hostgroup],
-                'params': {'host': hostname, 'all': True}
+            'method': 'hostgroup_add_member',
+            'item': [hostgroup],
+            'params': {'host': hostname, 'all': True}
         }
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
     def hostgroup_show(self, hostgroup):
-        m = {'item': [hostgroup], 'method': 'hostgroup_show', 'params':
-             {'all': True}}
-        results = self.makeReq(m)
+        m = {'item': [hostgroup], 'method': 'hostgroup_show', 'params': {'all': True}}
+        results = self.make_req(m)
 
         return results
 
@@ -231,53 +220,46 @@ class ipa(object):
         if not principal.split('@')[0] == self.login_user:
             item.append('CHANGING_PASSWORD_FOR_ANOTHER_USER')
         m = {'method': 'passwd', 'params': {'version': '2.112'}, 'item': item}
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
     def user_add(self, user, opts):
         opts['all'] = True
         m = {'method': 'user_add', 'item': [user], 'params': opts}
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
     def user_find(self, user=None, attrs={}, sizelimit=40000):
-        params = {'all': True,
-                  'no_members': False,
-                  'sizelimit': sizelimit,
-                  'whoami': False}
+        params = {'all': True, 'no_members': False, 'sizelimit': sizelimit, 'whoami': False}
         params.update(attrs)
         m = {'item': [user], 'method': 'user_find', 'params': params}
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
     def user_show(self, user):
-        m = {'item': [user], 'method': 'user_show', 'params':
-             {'all': True, 'raw': False}}
-        results = self.makeReq(m)
+        m = {'item': [user], 'method': 'user_show', 'params': {'all': True, 'raw': False}}
+        results = self.make_req(m)
 
         return results
 
     def user_status(self, user):
-        m = {'item': [user], 'method': 'user_status', 'params':
-             {'all': True, 'raw': False}}
-        results = self.makeReq(m)
+        m = {'item': [user], 'method': 'user_status', 'params': {'all': True, 'raw': False}}
+        results = self.make_req(m)
 
         return results
 
     def user_unlock(self, user):
-        m = {'item': [user], 'method': 'user_unlock', 'params':
-             {'version': '2.112'}}
-        results = self.makeReq(m)
+        m = {'item': [user], 'method': 'user_unlock', 'params': {'version': '2.112'}}
+        results = self.make_req(m)
 
         return results
 
     def user_disable(self, user):
-        m = {'item': [user], 'method': 'user_disable', 'params':
-             {'version': '2.112'}}
-        results = self.makeReq(m)
+        m = {'item': [user], 'method': 'user_disable', 'params': {'version': '2.112'}}
+        results = self.make_req(m)
 
         return results
 
@@ -286,11 +268,11 @@ class ipa(object):
             'method': 'user_mod',
             'item': [user],
             'params': {
-                    'all': False,
-                    'no_members': False,
-                    'raw': False,
-                    'rights': False,
-                    'version': '2.164'
+                'all': False,
+                'no_members': False,
+                'raw': False,
+                'rights': False,
+                'version': '2.164'
             }
         }
         if len(addattrs):
@@ -300,7 +282,7 @@ class ipa(object):
         if len(delattrs):
             m['params']['delattr'] = delattrs
 
-        return self.makeReq(m)
+        return self.make_req(m)
 
     def user_del(self, user, preserve=True):
         m = {
@@ -313,16 +295,13 @@ class ipa(object):
             }
         }
 
-        return self.makeReq(m)
+        return self.make_req(m)
 
     def stageuser_find(self, user=None, attrs={}, sizelimit=40000):
-        params = {'all': True,
-                  'no_members': False,
-                  'sizelimit': sizelimit,
-        }
+        params = {'all': True, 'no_members': False, 'sizelimit': sizelimit}
         params.update(attrs)
         m = {'item': [user], 'method': 'stageuser_find', 'params': params}
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
@@ -337,7 +316,7 @@ class ipa(object):
             'item': [user],
             'params': opts
         }
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
@@ -349,7 +328,7 @@ class ipa(object):
                 'version': '2.164'
             }
         }
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
@@ -358,11 +337,11 @@ class ipa(object):
             'method': 'stageuser_mod',
             'item': [user],
             'params': {
-                    'all': False,
-                    'no_members': False,
-                    'raw': False,
-                    'rights': False,
-                    'version': '2.164'
+                'all': False,
+                'no_members': False,
+                'raw': False,
+                'rights': False,
+                'version': '2.164'
             }
         }
         if len(addattrs):
@@ -372,7 +351,7 @@ class ipa(object):
         if len(delattrs):
             m['params']['delattr'] = delattrs
 
-        return self.makeReq(m)
+        return self.make_req(m)
 
     def stageuser_activate(self, user):
         m = {
@@ -382,7 +361,7 @@ class ipa(object):
                 'version': '2.164'
             }
         }
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
@@ -399,7 +378,7 @@ class ipa(object):
         }
         if permissions is not None:
             m['params']['permissions'] = permissions
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
@@ -416,7 +395,7 @@ class ipa(object):
         }
         if description:
             m['params']['description'] = description
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
 
@@ -436,6 +415,6 @@ class ipa(object):
             m['params']['automemberinclusiveregex'] = inclusive_regex
         if exclusive_regex:
             m['params']['automemberexclusiveregex'] = exclusive_regex
-        results = self.makeReq(m)
+        results = self.make_req(m)
 
         return results
