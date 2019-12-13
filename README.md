@@ -24,12 +24,12 @@ if user["result"]["count"] < 1:
     result = ipa.user_add(user=first_name, opts={
         "givenname": first_name,
         "sn": second_name,
-        "cn": f"{first_name} {second_name}"
+        "cn": "%s %s" % (first_name, second_name) 
     })
     if result["error"] is not None:
         print(result["error"])
     else:
-        print(f"user {first_name} {second_name} was created")
+        print("user %s %s was created", (first_name, second_name))
 ```
 
 ## License
