@@ -18,7 +18,8 @@ import logging
 
 class ipa(object):
 
-    def __init__(self, server, sslverify=False):
+    #def __init__(self, server, sslverify=False):
+    def __init__(self, server, sslverify=True):
         self.server = server
         self.sslverify = sslverify
         self.log = logging.getLogger(__name__)
@@ -73,7 +74,7 @@ class ipa(object):
 
         return results
 
-    def group_add(self, group, gidnumber=None, description=None):
+    def group_add(self, group, gidnumber=None, description=None, nonposix='false'):
         m = {'method': 'group_add',
              'item': [group],
              'params': {
@@ -83,6 +84,8 @@ class ipa(object):
         }
         if gidnumber is not None:
             m['params']['gidnumber'] = gidnumber
+        if nonposix == 'true':
+            m['params']['nonposix'] = 'true'
         results = self.makeReq(m)
 
         return results
@@ -436,6 +439,173 @@ class ipa(object):
             m['params']['automemberinclusiveregex'] = inclusive_regex
         if exclusive_regex:
             m['params']['automemberexclusiveregex'] = exclusive_regex
+        results = self.makeReq(m)
+
+        return results
+
+    def hbacrule_add(self, hbacrule, description=None, servicecategory='all'):
+        m = {
+                'method': 'hbacrule_add',
+                'item': [hbacrule],
+                'params': {
+                    'all': True,
+                    'description': description,
+                    'servicecategory': servicecategory
+                }
+        }
+        results = self.makeReq(m)
+
+        return results
+
+    def hbacrule_add_host(self, hbacrule, host=None, hostgroup=None ):
+        m = {
+                'method': 'hbacrule_add_host',
+                'item': [hbacrule],
+                'params': {
+                    'host':host, 
+                    'hostgroup':hostgroup
+                }
+        }
+        results = self.makeReq(m)
+
+        return results
+
+    def hbacrule_add_user(self, hbacrule, user=None, group=None ):
+        m = {
+                'method': 'hbacrule_add_user',
+                'item': [hbacrule],
+                'params': {
+                    'user':user, 
+                    'group':group
+                }
+        }
+        results = self.makeReq(m)
+
+        return results
+
+    def sudorule_show(self, sudorule):
+        m = {'item': [sudorule], 'method': 'sudorule_show', 'params':
+             {'all': True, 'raw': False}}
+        results = self.makeReq(m)
+
+        return results
+
+
+    def sudorule_add(self, sudorule, description=None, cmdcategory=None, usercategory=None, hostcategory=None, ipasudorunasusercategory=None, ipasudorunasgroupcategory=None):
+        m = {
+                'method': 'sudorule_add',
+                'item': [sudorule],
+                'params': {
+                    'description': description,
+                    'cmdcategory': cmdcategory,
+                    'usercategory': usercategory,
+                    'hostcategory': hostcategory,
+                    'ipasudorunasusercategory': ipasudorunasusercategory,
+                    'ipasudorunasgroupcategory': ipasudorunasgroupcategory
+                }
+        }
+        results = self.makeReq(m)
+
+        return results
+
+    def sudorule_add_host(self, sudorule, host=None, hostgroup=None ):
+        m = {
+                'method': 'sudorule_add_host',
+                'item': [sudorule],
+                'params': {
+                    'host': host, 
+                    'hostgroup': hostgroup
+                }
+        }
+        results = self.makeReq(m)
+
+        return results
+
+    def sudorule_add_user(self, sudorule, user=None, group=None ):
+        m = {
+                'method': 'sudorule_add_user',
+                'item': [sudorule],
+                'params': {
+                    'user': user, 
+                    'group': group
+                }
+        }
+        results = self.makeReq(m)
+
+        return results
+
+    def sudorule_add_option(self, sudorule, ipasudoopt=None ):
+        m = {
+                'method': 'sudorule_add_option',
+                'item': [sudorule],
+                'params': {
+                    'ipasudoopt': ipasudoopt
+                }
+        }
+        results = self.makeReq(m)
+
+        return results
+
+    def sudorule_add_allow_command(self, sudorule, sudocmd=None, sudocmdgroup=None ):
+        m = {
+                'method': 'sudorule_add_allow_command',
+                'item': [sudorule],
+                'params': {
+                    'sudocmd': sudocmd,
+                    'sudocmdgroup': sudocmdgroup 
+                }
+        }
+        results = self.makeReq(m)
+
+        return results
+
+    def sudorule_add_deny_command(self, sudorule, sudocmd=None, sudocmdgroup=None ):
+        m = {
+                'method': 'sudorule_add_deny_command',
+                'item': [sudorule],
+                'params': {
+                    'sudocmd': sudocmd,
+                    'sudocmdgroup': sudocmdgroup 
+                }
+        }
+        results = self.makeReq(m)
+
+        return results
+
+    def sudorule_add_option(self, sudorule, ipasudoopt=None ):
+        m = {
+                'method': 'sudorule_add_option',
+                'item': [sudorule],
+                'params': {
+                    'ipasudoopt': ipasudoopt
+                }
+        }
+        results = self.makeReq(m)
+
+        return results
+
+    def sudorule_add_allow_command(self, sudorule, sudocmd=None, sudocmdgroup=None ):
+        m = {
+                'method': 'sudorule_add_allow_command',
+                'item': [sudorule],
+                'params': {
+                    'sudocmd': sudocmd,
+                    'sudocmdgroup': sudocmdgroup 
+                }
+        }
+        results = self.makeReq(m)
+
+        return results
+
+    def sudorule_add_deny_command(self, sudorule, sudocmd=None, sudocmdgroup=None ):
+        m = {
+                'method': 'sudorule_add_deny_command',
+                'item': [sudorule],
+                'params': {
+                    'sudocmd': sudocmd,
+                    'sudocmdgroup': sudocmdgroup 
+                }
+        }
         results = self.makeReq(m)
 
         return results
